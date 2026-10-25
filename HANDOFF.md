@@ -1,65 +1,85 @@
 # Session handoff
 
-Last updated: 25 October 2026.
+Last updated: 26 October 2026.
 
-## Start here
+## Current direction
 
-Read [PLAN.md](PLAN.md). It is the main record of the agreed product direction, repository audit, cost estimates, evaluation design, and implementation phases. This note records session state and practical details for resuming work.
+Read [PLAN.md](PLAN.md). The user changed the immediate priority to a simple,
+non-AI fullstack search application. This is now implemented. The multilingual
+embedding pilot and Smart search are deferred; no paid AI processing has occurred.
 
-The user ended this session after planning. No application implementation, embeddings, model evaluation, or paid AI processing has been performed. Do not interpret this handoff as permission to start paid processing or implement the entire plan without considering the user's next request.
+## Application
 
-## Decisions to preserve
+- `app/main.py`: FastAPI API, read-only psycopg connection pool, parameterized SQL,
+  bounded search, live collection counts, page-aware text reader, local PDF serving.
+- `app/static/`: responsive English interface, Latvian source text, filters,
+  highlighted excerpts, pagination, URL state, accessible dialog reader.
+- `pyproject.toml`, `uv.lock`: locked Python dependencies; no frontend build.
+- `tests/test_app.py`: offline and opt-in live database integration tests.
+- `tests/browser_check.py`: Chromium smoke checks and screenshots in `/tmp`.
 
-- Search is the first product: relevant decisions, excerpts, filters, and original PDF page links.
-- Offer both non-AI Keyword search and multilingual Smart search.
-- Required query languages: Latvian, English, Russian. Other languages are welcome if they add little work; their quality is not yet validated.
-- Run on localhost initially. Use hosted embedding APIs rather than local models.
-- No confidential user facts in the initial scope.
-- Budget is not fixed. Evaluate and forecast before full-corpus processing.
-- OpenAI large is an evaluation baseline, not a proven winner or final commitment. Compare small and a multilingual alternative.
-- Jev is an optional candidate for reranking/relevance assessment and later classification. It may be omitted if evaluation does not justify it. It does not replace embeddings.
-- No legal expert has been identified. Use AI-assisted grading plus source-based targets and manual inspection, without claiming legal completeness.
-- Preserve source versions and passage references so future collections, notes, comparisons, and cited answers can reuse them.
+Run:
 
-## Repository state at handoff
+```bash
+uv sync --locked
+docker compose up -d
+uv run uvicorn app.main:app --host 127.0.0.1 --port 8000 --no-access-log
+```
 
-- Planning documents were added; application source and schema were not changed.
-- No commit was created during this session. Check `git status` before work and preserve existing changes.
-- Existing code: `download.py`, `load_postgres.py`, `db/schema.sql`, `docker-compose.yml`.
-- Local data: `data/lawdb.sqlite`, `data/pdf/<prefix>/<uuid>.pdf`, `data/text/<prefix>/<uuid>.txt`.
-- `.env` contains credentials. Its contents were not printed; continue keeping secrets out of logs and responses.
-- The running database was reachable with `docker compose exec -T db psql -U lawdb lawdb`. Docker access required sandbox approval in this session; do not assume the next environment has identical permissions.
+Open http://127.0.0.1:8000. See README.md for search syntax and validation commands.
+The app reads `.env`; do not print credentials. Optional `DATABASE_URL` overrides
+local Postgres settings. No schema/data migration or edits were needed.
 
-## Audit details worth retaining
+## Validation
 
-The database contained exactly 429,910 metadata records and 429,909 document texts. The SQLite manifest had one failed download: a response labeled as PDF was not actually a PDF. Postgres occupied about 11 GB and local data about 56 GB.
+Five tests passed, including real-corpus queries, exact case lookup, filters,
+pagination, text pages, PDF range serving, and input validation. Browser checks
+passed on desktop and mobile, including keyword search, empty results, reader,
+PDF page links, safe source-text rendering, and no JavaScript errors.
 
-The existing keyword search works. Its Latvian configuration is `simple` plus `unaccent`, without inflection stemming. One broad ranked query took 3.9 seconds; this is a single observation, not a measured latency distribution.
+Sandbox execution required escalation for dependency downloads, localhost server,
+Postgres connectivity, and Chromium. Sandboxed TestClient runs stalled; the same
+tests passed with local network access. A dependency emits a TestClient/httpx
+deprecation warning; tests still pass.
 
-Page boundaries survive in extracted text as form-feed characters (`\f`). Preserve them before normalization. Three PDF page counts were checked against these boundaries. The extraction-quality sample contained 500 documents; it was not a full OCR audit.
+## Scope and limitations
 
-The downloader skips previous successful downloads and the Postgres loader skips existing document texts. Replacement detection, withdrawals, content versions, and a source recheck policy still need design. Hashing alone cannot discover changes upstream.
+- Keyword search is non-AI and does not translate English/Russian questions.
+- Search uses `lv` (`simple` + `unaccent`), without inflection stemming or typo matching.
+- Exact identifiers use a separate mode and are case-sensitive.
+- Search covers records with extracted text; missing-text count is shown separately.
+- Results are paginated in groups of 20, with a next-page indicator, not total count.
+  Maximum 500 pages; narrow filters beyond that. Broad queries can take seconds.
+- Registration date is not a verified judgment date. Source category variants remain
+  separate. ECLI is frequently missing; UUID is the document identity.
+- Page mapping uses preserved form feeds. The prior extraction audit was a sample,
+  not a full correctness/OCR audit. Check original PDFs for layout and context.
+- Query text is not logged by the documented launch command, but URLs remain in
+  browser history. The app is localhost-only, without authentication.
+- No commit was created. Inspect `git status` and preserve changes.
 
-Do not use ECLI as the only key: about 46% of records lack it. Do not label registration date as judgment date. Normalize inconsistent process labels without overwriting original source values.
+## Existing corpus and ingestion
 
-## Cost estimate reproducibility
+At planning audit: 429,910 metadata records and 429,909 extracted documents,
+about 56 GB local files and 11 GB Postgres. One failed PDF download. Existing
+files: `download.py`, `load_postgres.py`, `db/schema.sql`, `docker-compose.yml`.
+Data: `data/lawdb.sqlite`, `data/pdf/<prefix>/<uuid>.pdf`,
+`data/text/<prefix>/<uuid>.txt`.
 
-No documents were sent to an AI API during the audit. Token counts were calculated locally using `tiktoken` and `cl100k_base`.
+The downloader skips successful downloads; the loader skips loaded texts.
+Replacement/withdrawal detection and source-version policy remain future work.
+Do not repeat the whole audit without a reason.
 
-The sample was selected by reading successful manifest rows ordered by document ID and applying Python `random.Random(42).sample(rows, 1000)`. It contained 14,975,359 characters and 7,093,421 tokens. The manifest's full character total was 6,726,599,550.
+## Future AI work (only when requested)
 
-The rough chunking calculation assumed 800-token passages and 100-token overlap. Extrapolation gave about 3.19 billion source tokens and 3.61 billion billed tokens. These were arithmetic estimates, not the output of a completed paragraph-aware chunker.
+The plan retains the ~5,000-document pilot, ~50 questions in LV/EN/RU, keyword /
+vector / hybrid comparisons, and optional reranking including Jev. No model is
+chosen. Recheck model access and prices and establish processing scope before
+paid work. Preserve original source versions and stable references.
 
-The large-model forecast was approximately $470 standard or $235 Batch, using the rates recorded in PLAN.md. Reverify prices and measure actual pilot passage volume before spending. Jev, reranking, evaluation-model calls, and hosting are excluded.
-
-Temporary tokenizer packages were installed under `/tmp/lawdb-audit-tokenizer`, with vocabulary cache under `/tmp/lawdb-audit-token-cache`. They may disappear and are not project dependencies. The audit used a Python 3.13 interpreter because the system Python was 3.14; do not depend on those temporary paths or add them to the application.
-
-## Suggested next session
-
-1. Read the user's new request and PLAN.md; inspect current working-tree and database state only as needed.
-2. If proceeding with the pilot, create a reproducible representative selection of about 5,000 decisions and a question set covering all three required languages.
-3. Establish page-aware passages and a keyword baseline before comparing paid embedding candidates.
-4. Verify current model access and prices, estimate the pilot's actual costs, and establish the authorized processing scope before API calls.
-5. Compare retrieval quality first, then the incremental value of reranking, including Jev if available.
-
-Do not repeat the full repository investigation merely because this is a new session. Refresh findings when data, code, prices, or the task have changed.
+Original cost audit: deterministic `random.Random(42).sample(rows, 1000)` over
+successful manifest rows ordered by ID; 14,975,359 characters and 7,093,421
+`cl100k_base` tokens. Full character total 6,726,599,550. Estimated 3.19B source
+tokens / 3.61B with illustrative 800-token chunks and 100-token overlap. Large
+model forecast ~$470 standard / $235 Batch at planning rates, not authorization.
+Temporary audit tokenizer paths under `/tmp` are not application dependencies.

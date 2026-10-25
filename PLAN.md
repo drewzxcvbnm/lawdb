@@ -1,6 +1,12 @@
 # Court decision search: implementation and evaluation plan
 
-Planning baseline: 25 October 2026. This document records the agreed direction; implementation has not started. Model prices and availability must be checked again before paid processing.
+Planning baseline: 25 October 2026. Updated 26 October 2026: the user chose to start with a standalone non-AI fullstack search application. That localhost application is now implemented; the embedding pilot and Smart search remain future work. Model prices and availability must be checked again before paid processing.
+
+### Updated delivery order: keyword search first
+
+The immediate milestone is a usable localhost application over the existing full-text index, before any AI evaluation. Implemented in `app/`: keyword and exact-identifier search, court/category/instance/registration-date filters, relevance/date sorting, pagination, highlighted source excerpts, page-aware reading, and original local PDF links. The frontend uses English labels and preserves Latvian source text and metadata.
+
+The existing schema and downloaded corpus are reused without migration. See README.md for startup and tests. The multilingual pilot, model comparison, Smart search, and full vector indexing described below are deferred until requested. Keyword search does not translate queries or provide multilingual semantic retrieval.
 
 ## 1. Goal
 
@@ -8,7 +14,7 @@ Make Latvian public anonymized court decisions easy to find and inspect, includi
 
 The first product is a search application. Users describe an issue or enter keywords, narrow results with filters, read relevant excerpts, and open the original decision at the relevant PDF page. Future research features should build on these same sources and references.
 
-The first milestone is to demonstrate useful multilingual retrieval on a small collection before paying to index the full database.
+The first milestone is now non-AI search over the existing collection. A subsequent milestone is to demonstrate useful multilingual retrieval on a small collection before paying to index the full database.
 
 ## 2. Agreed constraints and scope
 
@@ -39,7 +45,7 @@ The repository already contains a resumable downloader, local PDFs, extracted te
 | Database deployment | Postgres 17 image with pgvector 0.8.1 |
 | Installed search extensions | `vector`, `pg_trgm`, `unaccent` |
 | Existing keyword search | Generated full-text column and GIN index |
-| Existing application | No web UI or application API |
+| Existing application | Local keyword search UI and read-only FastAPI API implemented 26 October 2026 |
 
 Relevant files:
 
@@ -287,6 +293,8 @@ The following should be settled through the pilot or implementation design:
 Public deployment, confidential inputs, outcome prediction, and broad automated legal advice are outside the initial scope. Revisit deployment and data-handling requirements if that scope changes.
 
 ## 11. Deliverables in order
+
+The following original AI delivery sequence now follows the standalone non-AI application implemented first. It is retained as the future Smart-search roadmap.
 
 1. Reproducible pilot collection and multilingual question set.
 2. Evaluation report comparing relevance, latency, and cost.

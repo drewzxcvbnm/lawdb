@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Search and inspect Latvia’s public anonymized court decisions locally.">
+  <title>LawDB — Latvian court decisions</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='8' fill='%23233738'/%3E%3Ctext x='11' y='29' font-size='28' fill='%23fff'%3EL%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/static/styles.css"><script src="/static/app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#query">Skip to search</a>
+  <header class="topbar"><a class="brand" href="/" aria-label="LawDB home"><span class="brand-icon" aria-hidden="true">§</span> LawDB<span class="brand-divider"></span><span class="brand-caption">LATVIAN CASE LAW</span></a><span class="local-badge"><span></span> Local collection</span></header>
+  <main class="workspace">
+    <section class="intro"><div class="eyebrow">THE PUBLIC RECORD, WITHIN REACH</div><h1>Find the decision. <br><span>Read the source.</span></h1><p>Search Latvia’s published court decisions.<br class="mobile-break"> Original texts. Direct references. No AI.</p><div class="collection-stats" id="collection-stats" aria-live="polite">Connecting to your collection…</div></section>
+    <form id="search-form">
+      <section class="search-panel" aria-label="Search decisions">
+        <div class="search-top"><label for="query">Search the collection</label><span class="keyword-badge">Keyword search</span></div>
+        <div class="search-row"><span class="search-icon" aria-hidden="true">⌕</span><input type="search" id="query" name="q" maxlength="300" placeholder="Try darba līgums, a phrase, or a case number…" autocomplete="off"><button class="primary" type="submit">Search <span aria-hidden="true">→</span></button></div>
+        <div class="search-options"><label for="mode">Search in <select id="mode" name="mode"><option value="text">Decision text</option><option value="identifier">Exact case number / ECLI / ID</option></select></label><details class="search-help"><summary>Search tips</summary><p>Use Latvian words from the decision. Accents are optional; word endings are matched as written. Put a phrase in quotation marks, use OR for alternatives, or -word to exclude a word. Identifier mode matches a complete case number, application number, ECLI, or document UUID exactly. Queries are not translated.</p></details></div>
+      </section>
+      <div class="content-grid">
+        <aside class="filters" aria-label="Search filters"><div class="filter-heading"><h2>Refine results</h2><button class="text-button" id="reset" type="button">Reset</button></div>
+          <label for="court">Court</label><select id="court" name="court"><option value="">All courts</option></select>
+          <label for="process_type">Case category</label><select id="process_type" name="process_type"><option value="">All categories</option></select>
+          <label for="instance">Court instance</label><select id="instance" name="instance"><option value="">All instances</option></select>
+          <fieldset><legend>Registration date</legend><label for="date_from" class="date-label">From</label><input type="date" id="date_from" name="date_from"><label for="date_to" class="date-label">To</label><input type="date" id="date_to" name="date_to"></fieldset>
+          <p class="filter-note">Dates refer to registration in the source record, not necessarily the judgment date.</p><button type="submit" class="apply-button">Apply filters</button>
+          <div class="source-note"><span class="eyebrow">ABOUT THE COLLECTION</span><p>Public, anonymized decisions from Latvia’s courts. Source metadata and original wording are preserved.</p><a href="https://data.gov.lv/dati/dataset/anonimizetie-nolemumi" target="_blank" rel="noreferrer">View public dataset ↗</a></div>
+        </aside>
+        <section class="results-section" aria-label="Search results"><div class="results-toolbar"><div><h2 id="results-heading">Recent decisions</h2><p id="results-meta" role="status" aria-live="polite">Loading the collection…</p></div><label class="sort-label" for="sort">Sort by<select id="sort" name="sort"><option value="relevance">Relevance</option><option value="newest">Newest registration</option><option value="oldest">Oldest registration</option></select></label></div>
+          <div id="active-filters" class="active-filters"></div><div id="results" aria-busy="true"></div>
+          <nav class="pagination" id="pagination" aria-label="Result pages" hidden><button type="button" id="previous" class="secondary">← Previous</button><span id="page-label"></span><button type="button" id="next" class="secondary">Next →</button></nav>
+        </section>
+      </div>
+    </form>
+    <footer><span>LawDB <span aria-hidden="true">/</span> A closer look at Latvian case law</span><span>Source text, without generated answers.</span></footer>
+  </main>
+  <dialog id="reader" aria-labelledby="reader-title"><div class="reader-header"><div><span class="eyebrow">DECISION READER</span><h2 id="reader-title">Decision</h2></div><button type="button" id="close-reader" class="close-button" aria-label="Close decision reader">×</button></div><div id="reader-meta"></div><div class="reader-toolbar"><div class="reader-pages"><button type="button" id="page-back" class="secondary" aria-label="Previous document page">←</button><span id="document-page"></span><button type="button" id="page-forward" class="secondary" aria-label="Next document page">→</button></div><a id="pdf-link" class="primary link-button" target="_blank" rel="noreferrer">Open original PDF ↗</a></div><p class="reader-note">Extracted source text · Check the original PDF for formatting and context.</p><pre id="reader-text" lang="lv"></pre><p id="reader-error" role="alert"></p></dialog>
+</body>
+</html>
